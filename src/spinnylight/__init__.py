@@ -1,2 +1,3 @@
-def main() -> None:
-    print("Hello from spinnylight!")
+from .main import test_BLE
+
+__all__ = ["test_BLE"]
