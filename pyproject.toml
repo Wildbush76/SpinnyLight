@@ -7,7 +7,11 @@ authors = [
     { name = "Wildbush", email = "75509166+Wildbush76@users.noreply.github.com" },
 ]
 requires-python = ">=3.13"
-dependencies = ["bleak>=3.0.2", "pydantic-settings>=2.15.0"]
+dependencies = [
+    "bleak>=3.0.2",
+    "fastapi>=0.162.0",
+    "pydantic-settings>=2.15.0",
+]
 
 [project.scripts]
 test_ble = "spinnylight:test_BLE"

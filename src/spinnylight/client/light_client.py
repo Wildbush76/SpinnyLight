@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from functools import lru_cache
 from logging import getLogger
 
 from bleak import BleakClient, BleakScanner
@@ -27,9 +28,11 @@ class LightClient:
         self._trigger.set()
 
     async def _send_light_trigger(self, client: BleakClient) -> None:
-
         try:
-            await client.write_gatt_char(self._settings.trigger_light_uuid, True, False)
+            await client.write_gatt_char(
+                self._settings.trigger_light_uuid, bytes([True]), True
+            )
+            self._logger.info("Successfully sent trigger")
         except BleakCharacteristicNotFoundError:
             self._logger.critical(
                 "Failed to find characteristic uuid! -> ", exc_info=True
@@ -50,6 +53,7 @@ class LightClient:
 
         async with BleakClient(device) as client:
             while await self._trigger.wait():
+                self._logger.info("Triggering light!")
                 await self._send_light_trigger(client)
                 self._trigger.clear()
 
@@ -60,3 +64,8 @@ class LightClient:
 
         except asyncio.CancelledError:
             self._logger.info("Stopping BLE Light Client")
+
+
+@lru_cache
+def get_light_client() -> LightClient:
+    return LightClient()
