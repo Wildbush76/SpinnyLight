@@ -1,10 +1,13 @@
+import asyncio
 import logging
 import sys
 from contextlib import asynccontextmanager
 
+import aiofiles
 from fastapi import FastAPI
 
 from .client.light_client import get_light_client
+from .discord_bot.red_light_bot import RedLightBot
 from .router import router
 
 
@@ -25,7 +28,13 @@ async def lifespan(app: FastAPI):
     _setup_logger()
     client = get_light_client()
     client.start()
+    bot = RedLightBot()
+    async with aiofiles.open("/run/secrets/discord_token") as file:
+        token = await file.read()
+
+    asyncio.create_task(bot.start(token))
     yield
+    bot.shutdown()
     client.stop()
 
 

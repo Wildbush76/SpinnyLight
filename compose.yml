@@ -1,0 +1,27 @@
+services:
+  spinnylight:
+    build:
+      context: .
+      platforms:
+      #  - linux/arm64
+        - linux/amd64
+    image: ghcr.io/wildbush76/spinnylight:latest
+
+    environment:
+      - DATA_PATH=/var/lib/spinnylight/
+    volumes:
+      - spinnylight:/var/lib/spinnylight
+    pull_policy: every_1h
+    restart: unless-stopped
+    container_name: spinnylight
+    secrets:
+      - discord_token
+    ports:
+      - "8081:80"
+
+secrets:
+  discord_token:
+    file: ./token.txt
+
+volumes:
+  spinnylight:
