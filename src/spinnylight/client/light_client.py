@@ -24,11 +24,17 @@ class LightClient:
     ):
         if device.address != self._settings.light_mac_address:
             return
-        self._scanner.stop()
-        self._logger.debug("Device found, connecting")
-        self._connection = asyncio.create_task(self._connect(device))
+
+        if self._connection is None or self._connection.done():
+            await self._scanner.stop()
+            self._logger.debug("Device found, connecting")
+            self._connection = asyncio.create_task(self._connect(device))
 
     def start(self) -> None:
+        self._logger.debug("Starting scanning")
+        self._start()
+
+    def _start(self) -> None:
         asyncio.create_task(self._scanner.start())
 
     def stop(self) -> None:
@@ -39,7 +45,6 @@ class LightClient:
             self._connection.cancel()
 
     def trigger(self) -> None:
-        self._logger.debug("Triggering Light!")
         self._trigger.set()
 
     async def _send_light_trigger(self, client: BleakClient) -> None:
@@ -47,7 +52,7 @@ class LightClient:
             await client.write_gatt_char(
                 self._settings.trigger_light_uuid, bytes([True]), True
             )
-            self._logger.debug("Successfully sent trigger")
+            self._logger.debug("Triggered Light!")
         except BleakCharacteristicNotFoundError:
             self._logger.critical(
                 "Failed to find characteristic uuid! -> ", exc_info=True
@@ -55,15 +60,18 @@ class LightClient:
 
     def _disconnect(self, client: BleakClient):
         self._logger.warning("Client Disconnected!")
-        self.start()
+        self._start()
 
     async def _connect(self, device: BLEDevice):
         async with BleakClient(
             device, disconnected_callback=self._disconnect
         ) as client:
-            while await self._trigger.wait():
-                await self._send_light_trigger(client)
-                self._trigger.clear()
+            try:
+                while await self._trigger.wait():
+                    await self._send_light_trigger(client)
+                    self._trigger.clear()
+            except asyncio.CancelledError:
+                self._logger.debug("Connection canceled, closing")
 
 
 @lru_cache

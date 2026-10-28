@@ -45,12 +45,9 @@ class ShreddedCabbageCommands(commands.Cog):
     @app_commands.command(name="trigger_light")
     async def _trigger_light(self, interaction: discord.Interaction):
         self._red_light_client.trigger()
-        await interaction.response.send_message("Trigger the light! C:")
-
-    @app_commands.command(name="check_status")
-    async def _status(self, interaction: discord.Interaction):
-        client = get_light_client()
-        await interaction.response.send_message(f"STATUS -> {client._task.done()}")
+        await interaction.response.send_message(
+            "https://klipy.com/gifs/alarm-red-alert-2"
+        )
 
 
 async def setup(bot: commands.Bot):
