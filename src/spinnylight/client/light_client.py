@@ -3,6 +3,8 @@ from functools import lru_cache
 from logging import DEBUG, getLogger
 
 from bleak import BleakClient, BleakScanner
+from bleak.backends.device import BLEDevice
+from bleak.backends.scanner import AdvertisementData
 from bleak.exc import BleakCharacteristicNotFoundError
 
 from .light_client_settings import get_settings
@@ -11,16 +13,30 @@ from .light_client_settings import get_settings
 class LightClient:
     def __init__(self):
         self._settings = get_settings()
-        self._task: None | asyncio.Task = None
         self._logger = getLogger(LightClient.__name__)
         self._logger.setLevel(DEBUG)
         self._trigger = asyncio.Event()
+        self._scanner = BleakScanner(self._bleak_detection)
+        self._connection: asyncio.Task | None = None
+
+    async def _bleak_detection(
+        self, device: BLEDevice, advertisement: AdvertisementData
+    ):
+        if device.address != self._settings.light_mac_address:
+            return
+        self._scanner.stop()
+        self._logger.debug("Device found, connecting")
+        self._connection = asyncio.create_task(self._connect(device))
 
     def start(self) -> None:
-        self._task = asyncio.create_task(self._run_client())
+        asyncio.create_task(self._scanner.start())
 
     def stop(self) -> None:
-        self._task.cancel()
+        self._logger.debug("stopping light client")
+        asyncio.create_task(self._scanner.stop())
+
+        if self._connection is not None:
+            self._connection.cancel()
 
     def trigger(self) -> None:
         self._logger.debug("Triggering Light!")
@@ -37,32 +53,17 @@ class LightClient:
                 "Failed to find characteristic uuid! -> ", exc_info=True
             )
 
-    async def _connect_client(self) -> None:
-        device = None
+    def _disconnect(self, client: BleakClient):
+        self._logger.warning("Client Disconnected!")
+        self.start()
 
-        while device is None:
-            self._logger.debug(
-                f"Attempting to connect to server @ {self._settings.light_mac_address}"
-            )
-            device = await BleakScanner.find_device_by_address(
-                self._settings.light_mac_address
-            )
-
-        self._logger.debug("Connected to the server!")
-
-        async with BleakClient(device) as client:
+    async def _connect(self, device: BLEDevice):
+        async with BleakClient(
+            device, disconnected_callback=self._disconnect
+        ) as client:
             while await self._trigger.wait():
                 await self._send_light_trigger(client)
                 self._trigger.clear()
-
-    async def _run_client(self) -> None:
-        self._logger.debug("Starting BLE light client")
-        try:
-            while True:
-                await self._connect_client()
-
-        except asyncio.CancelledError:
-            self._logger.debug("Stopping BLE Light Client")
 
 
 @lru_cache

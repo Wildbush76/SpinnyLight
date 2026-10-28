@@ -47,6 +47,11 @@ class ShreddedCabbageCommands(commands.Cog):
         self._red_light_client.trigger()
         await interaction.response.send_message("Trigger the light! C:")
 
+    @app_commands.command(name="check_status")
+    async def _status(self, interaction: discord.Interaction):
+        client = get_light_client()
+        await interaction.response.send_message(f"STATUS -> {client._task.done()}")
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ShreddedCabbageCommands(bot))

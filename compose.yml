@@ -11,11 +11,14 @@ services:
       - DATA_PATH=/var/lib/spinnylight/
     volumes:
       - spinnylight:/var/lib/spinnylight
+      - /var/run/dbus:/var/run/dbus
+
     pull_policy: every_1h
     restart: unless-stopped
     container_name: spinnylight
     secrets:
       - discord_token
+    privileged: true 
     ports:
       - "8081:80"
 
