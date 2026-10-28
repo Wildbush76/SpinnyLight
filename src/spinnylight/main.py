@@ -16,7 +16,8 @@ def _setup_logger():
     root_logger.setLevel(logging.INFO)
 
     log_format = logging.Formatter(
-        fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+        fmt="%(asctime)s [%(levelname)s] %(name)s : %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
     _console_handler = logging.StreamHandler(sys.stdout)
     _console_handler.setFormatter(log_format)
@@ -35,8 +36,8 @@ async def lifespan(app: FastAPI):
 
     asyncio.create_task(bot.start(token))
     yield
-    bot.shutdown()
-    client.stop()
+    await bot.shutdown()
+    await client.stop()
 
 
 app = FastAPI(lifespan=lifespan)

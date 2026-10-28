@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import asyncio
 import logging
-import signal
 from typing import override
 
 import discord
@@ -46,13 +44,6 @@ class RedLightBot(commands.Bot):
             discord_handler.setLevel(logging.INFO)
             logging.getLogger().addHandler(discord_handler)
 
-            self._logger.debug("Setting Up Signal Logger")
-            loop = asyncio.get_event_loop()
-            for sig in (signal.SIGTERM, signal.SIGINT):
-                loop.add_signal_handler(
-                    sig, lambda: asyncio.create_task(self.shutdown())
-                )
-
         await self.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.watching, name="The light"
@@ -68,6 +59,6 @@ class RedLightBot(commands.Bot):
         return "-" * dash_count + message + "-" * dash_count
 
     async def shutdown(self):
-        self._logger.info("Shutting down")
+        self._logger.debug(f"Shutting down {RedLightBot.__name__}")
 
         await self.close()

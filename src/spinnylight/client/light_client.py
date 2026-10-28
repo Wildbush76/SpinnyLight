@@ -31,18 +31,19 @@ class LightClient:
             self._connection = asyncio.create_task(self._connect(device))
 
     def start(self) -> None:
-        self._logger.debug("Starting scanning")
+        self._logger.debug(f"Starting {LightClient.__name__}")
         self._start()
 
     def _start(self) -> None:
         asyncio.create_task(self._scanner.start())
 
-    def stop(self) -> None:
-        self._logger.debug("stopping light client")
-        asyncio.create_task(self._scanner.stop())
+    async def stop(self) -> None:
+        self._logger.debug(f"Stopping {LightClient.__name__}")
+        await self._scanner.stop()
 
         if self._connection is not None:
             self._connection.cancel()
+            await self._connection
 
     def trigger(self) -> None:
         self._trigger.set()

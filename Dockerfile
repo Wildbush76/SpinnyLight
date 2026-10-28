@@ -6,6 +6,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /
 # Install uv.
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
+RUN apt-get update && apt-get install -y bluez
+
 # Copy the application into the container.
 COPY . /app
 
