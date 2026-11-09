@@ -3,7 +3,7 @@ services:
     build:
       context: .
       platforms:
-      #  - linux/arm64
+        - linux/arm64
         - linux/amd64
     image: ghcr.io/wildbush76/spinnylight:latest
 

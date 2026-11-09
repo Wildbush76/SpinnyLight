@@ -11,14 +11,10 @@ dependencies = [
     "aiofiles>=25.1.0",
     "bleak>=3.0.2",
     "discord>=2.3.2",
-    "discord-logging-handler",
+    "discord-py-logging>=0.3.0",
     "fastapi[standard]>=0.162.0",
     "pydantic-settings>=2.15.0",
 ]
 
 [tool.fastapi]
 entrypoint = "main:app"
-
-
-[tool.uv.sources]
-discord-logging-handler = { git = "https://github.com/Wildbush76/discord_logging_handler" }

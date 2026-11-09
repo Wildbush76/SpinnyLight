@@ -18,10 +18,11 @@ class LightClient:
         self._trigger = asyncio.Event()
         self._scanner = BleakScanner(self._bleak_detection)
         self._connection: asyncio.Task | None = None
+        self._is_scanning: bool = False
 
     async def _bleak_detection(
         self, device: BLEDevice, advertisement: AdvertisementData
-    ):
+    ) -> None:
         if device.address != self._settings.light_mac_address:
             return
 
@@ -35,11 +36,14 @@ class LightClient:
         self._start()
 
     def _start(self) -> None:
-        asyncio.create_task(self._scanner.start())
+        if not self._is_scanning:
+            asyncio.create_task(self._scanner.start())
+            self._is_scanning = True
 
     async def stop(self) -> None:
         self._logger.debug(f"Stopping {LightClient.__name__}")
         await self._scanner.stop()
+        self._is_scanning = False
 
         if self._connection is not None:
             self._connection.cancel()
