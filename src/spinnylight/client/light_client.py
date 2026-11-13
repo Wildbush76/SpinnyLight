@@ -27,7 +27,7 @@ class LightClient:
             return
 
         if self._connection is None or self._connection.done():
-            await self._scanner.stop()
+            await self._stop_scanning()
             self._logger.debug("Device found, connecting")
             self._connection = asyncio.create_task(self._connect(device))
 
@@ -40,10 +40,13 @@ class LightClient:
             asyncio.create_task(self._scanner.start())
             self._is_scanning = True
 
-    async def stop(self) -> None:
-        self._logger.debug(f"Stopping {LightClient.__name__}")
+    async def _stop_scanning(self) -> None:
         await self._scanner.stop()
         self._is_scanning = False
+
+    async def stop(self) -> None:
+        self._logger.debug(f"Stopping {LightClient.__name__}")
+        await self._stop_scanning()
 
         if self._connection is not None:
             self._connection.cancel()
